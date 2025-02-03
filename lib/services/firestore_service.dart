@@ -82,4 +82,6 @@ class FirestoreService {
   Stream<QuerySnapshot> getImageUrls() {
     return _imagesCollection.orderBy('timestamp', descending: true).snapshots();
   }
+
+  getOrders() {}
 }
