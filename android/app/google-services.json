@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "1012382906514",
+    "project_id": "ice-creamery-9c1e6",
+    "storage_bucket": "ice-creamery-9c1e6.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1012382906514:android:4562f4f89829e8c20b8e4b",
+        "android_client_info": {
+          "package_name": "com.example.ice_creamery"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA5523GYqK49_t0Z9X3gCIOkEgq8AFdURE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
