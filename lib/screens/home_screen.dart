@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:ice_creamery/screens/login.dart';
-// import 'package:ice_cream_app/screens/login.dart';
+import 'package:get/get.dart';
 import 'adimin/admin_dashboard.dart';
-// import 'admin_dashboard.dart';
+import 'login.dart';
+// import '../admin/admin_dashboard.dart';
 
 class HomePage extends StatelessWidget {
   const HomePage({super.key});
@@ -11,14 +11,39 @@ class HomePage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFB0E5FE),
-      body: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          const Spacer(),
-          Center(child: Image.asset('assets/logo.png', height: 300)),
-          const SizedBox(height: 20),
-          const Center(
-            child: Text(
+      body: SafeArea(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Spacer(),
+            Center(
+              child: Image.asset(
+                'assets/logo.png',
+                height: 300,
+                errorBuilder: (context, error, stackTrace) {
+                  print('Error loading logo: $error');
+                  return Column(
+                    children: [
+                      const Icon(
+                        Icons.error_outline,
+                        size: 60,
+                        color: Colors.white,
+                      ),
+                      const SizedBox(height: 10),
+                      Text(
+                        'Unable to load logo',
+                        style: TextStyle(
+                          color: Colors.white.withOpacity(0.8),
+                          fontSize: 16,
+                        ),
+                      ),
+                    ],
+                  );
+                },
+              ),
+            ),
+            const SizedBox(height: 20),
+            const Text(
               "Enjoy Your Ice Cream",
               style: TextStyle(
                 fontFamily: 'Poppins',
@@ -27,53 +52,51 @@ class HomePage extends StatelessWidget {
                 color: Colors.white,
               ),
             ),
+            const SizedBox(height: 40),
+            _buildButton(
+              label: "Get Started",
+              color: Colors.pinkAccent,
+              onPressed: () => Get.to(() => LoginPage()),
+            ),
+            const SizedBox(height: 20),
+            _buildButton(
+              label: "Admin Dashboard",
+              color: Colors.blueAccent,
+              onPressed: () => Get.to(() => AdminDashboard()),
+            ),
+            const Spacer(),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildButton({
+    required String label,
+    required Color color,
+    required VoidCallback onPressed,
+  }) {
+    return Container(
+      width: 250, // Fixed width for consistent button sizes
+      child: ElevatedButton(
+        onPressed: onPressed,
+        style: ElevatedButton.styleFrom(
+          backgroundColor: color,
+          foregroundColor: Colors.white,
+          padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 15),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(30),
           ),
-          const SizedBox(height: 20),
-          ElevatedButton(
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => LoginPage()),
-              );
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.pinkAccent,
-              foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 15),
-            ),
-            child: const Text(
-              "Get Started",
-              style: TextStyle(
-                fontFamily: 'Poppins',
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
+          elevation: 5,
+        ),
+        child: Text(
+          label,
+          style: const TextStyle(
+            fontFamily: 'Poppins',
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
           ),
-          const SizedBox(height: 20),
-          ElevatedButton(
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => AdminDashboard()),
-              );
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.blueAccent,
-              foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 15),
-            ),
-            child: const Text(
-              "Admin Dashboard",
-              style: TextStyle(
-                fontFamily: 'Poppins',
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ),
-          const Spacer(),
-        ],
+        ),
       ),
     );
   }

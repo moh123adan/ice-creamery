@@ -1,5 +1,4 @@
-import 'dart:io';
-import 'package:flutter/foundation.dart';
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
@@ -16,12 +15,62 @@ class AdminDashboard extends StatelessWidget {
   final TextEditingController descriptionController = TextEditingController();
 
   final ImagePicker _picker = ImagePicker();
-  final Rx<XFile?> selectedImage = Rx<XFile?>(null);
+  final Rx<Uint8List?> selectedImageData = Rx<Uint8List?>(null);
 
   Future<void> _pickImage() async {
-    final pickedFile = await _picker.pickImage(source: ImageSource.gallery);
-    if (pickedFile != null) {
-      selectedImage.value = pickedFile;
+    try {
+      final XFile? pickedFile =
+          await _picker.pickImage(source: ImageSource.gallery);
+      if (pickedFile != null) {
+        selectedImageData.value = await pickedFile.readAsBytes();
+        print(
+            'Image picked successfully. Size: ${selectedImageData.value!.length} bytes');
+      }
+    } catch (e) {
+      print('Error picking image: $e');
+      Get.snackbar('Error', 'Failed to pick image: $e');
+    }
+  }
+
+  Future<void> _submitProduct() async {
+    if (nameController.text.isEmpty ||
+        priceController.text.isEmpty ||
+        descriptionController.text.isEmpty ||
+        selectedImageData.value == null) {
+      Get.snackbar(
+          "Error", "All fields are required and an image must be selected.");
+      return;
+    }
+
+    try {
+      Get.dialog(
+        const Center(child: CircularProgressIndicator()),
+        barrierDismissible: false,
+      );
+
+      final imageUrl =
+          await _adminController.uploadImage(selectedImageData.value!);
+      print('Image uploaded to ImgBB, URL: $imageUrl');
+
+      await _adminController.addNewProduct(
+        nameController.text,
+        double.parse(priceController.text),
+        imageUrl,
+        descriptionController.text,
+      );
+
+      Get.back(); // Close loading indicator
+
+      nameController.clear();
+      priceController.clear();
+      descriptionController.clear();
+      selectedImageData.value = null;
+
+      Get.snackbar("Success", "Product added successfully!");
+    } catch (e) {
+      Get.back(); // Close loading indicator
+      print('Error occurred: $e');
+      Get.snackbar("Error", "Failed to add product: $e");
     }
   }
 
@@ -38,66 +87,38 @@ class AdminDashboard extends StatelessWidget {
                 controller: nameController,
                 decoration: const InputDecoration(labelText: 'Product Name'),
               ),
+              const SizedBox(height: 10),
               TextField(
                 controller: priceController,
                 decoration: const InputDecoration(labelText: 'Price'),
                 keyboardType: TextInputType.number,
               ),
+              const SizedBox(height: 10),
               TextField(
                 controller: descriptionController,
                 decoration: const InputDecoration(labelText: 'Description'),
+                maxLines: 3,
               ),
-              const SizedBox(height: 10),
+              const SizedBox(height: 20),
               Obx(() {
-                if (selectedImage.value == null) {
+                if (selectedImageData.value == null) {
                   return const Text('No Image Selected');
                 } else {
-                  return kIsWeb
-                      ? Image.network(selectedImage.value!.path, height: 150)
-                      : Image.file(File(selectedImage.value!.path),
-                          height: 150);
+                  return Image.memory(
+                    selectedImageData.value!,
+                    height: 150,
+                    fit: BoxFit.cover,
+                  );
                 }
               }),
+              const SizedBox(height: 10),
               ElevatedButton(
                 onPressed: _pickImage,
                 child: const Text('Select Image'),
               ),
               const SizedBox(height: 20),
               ElevatedButton(
-                onPressed: () async {
-                  if (nameController.text.isEmpty ||
-                      priceController.text.isEmpty ||
-                      descriptionController.text.isEmpty ||
-                      selectedImage.value == null) {
-                    Get.snackbar("Error",
-                        "All fields are required and an image must be selected.");
-                    return;
-                  }
-
-                  try {
-                    final imageFile = File(selectedImage.value!.path);
-                    final imageUrl =
-                        await _adminController.uploadImage(imageFile);
-
-                    await _adminController.addNewProduct(
-                      nameController.text,
-                      double.parse(priceController.text),
-                      imageUrl,
-                      descriptionController.text,
-                    );
-
-                    // Clear fields after successful upload
-                    nameController.clear();
-                    priceController.clear();
-                    descriptionController.clear();
-                    selectedImage.value = null;
-
-                    Get.snackbar("Success", "Product added successfully!");
-                  } catch (e) {
-                    print('Error occurred: $e');
-                    Get.snackbar("Error", "Failed to add product: $e");
-                  }
-                },
+                onPressed: _submitProduct,
                 child: const Text('Add Product'),
               ),
             ],
