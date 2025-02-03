@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
 import '../../controllers/admin_controller.dart';
-// import '../controllers/admin_controller.dart';
+import '../../screens/menu_screen.dart';
 
 class AdminDashboard extends StatelessWidget {
   AdminDashboard({super.key});
@@ -67,6 +67,9 @@ class AdminDashboard extends StatelessWidget {
       selectedImageData.value = null;
 
       Get.snackbar("Success", "Product added successfully!");
+
+      // Navigate to MenuScreen after successful product addition
+      Get.off(() => MenuScreen());
     } catch (e) {
       Get.back(); // Close loading indicator
       print('Error occurred: $e');
@@ -82,6 +85,7 @@ class AdminDashboard extends StatelessWidget {
         padding: const EdgeInsets.all(16.0),
         child: SingleChildScrollView(
           child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               TextField(
                 controller: nameController,
@@ -102,7 +106,8 @@ class AdminDashboard extends StatelessWidget {
               const SizedBox(height: 20),
               Obx(() {
                 if (selectedImageData.value == null) {
-                  return const Text('No Image Selected');
+                  return const Text('No Image Selected',
+                      textAlign: TextAlign.center);
                 } else {
                   return Image.memory(
                     selectedImageData.value!,
