@@ -9,7 +9,13 @@ import '../services/firestore_service.dart';
 class AdminController extends GetxController {
   final FirestoreService _firestoreService = Get.find<FirestoreService>();
   final String _imgbbApiKey =
-      '45a7b0069a5542187628a448ca0ea525'; // Your ImgBB API key
+      '45a7b0069a5542187628a448ca0ea525';
+
+  get users => null;
+
+  get products => null;
+
+  get orders => null; // Your ImgBB API key
 
   Future<String> uploadImage(Uint8List imageData) async {
     try {
@@ -55,4 +61,8 @@ class AdminController extends GetxController {
       rethrow;
     }
   }
+
+  void updateUserRole(id, bool bool) {}
+
+  void deleteProduct(id) {}
 }
