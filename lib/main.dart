@@ -1,34 +1,45 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:firebase_core/firebase_core.dart';
-import 'package:image_picker/image_picker.dart';
-import 'dart:io';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'controllers/auth_controller.dart';
 import 'controllers/admin_controller.dart';
+import 'controllers/cart_controller.dart';
+import 'controllers/navigation_controller.dart';
+import 'screens/admin/admin_dashboard.dart';
 import 'screens/home_screen.dart';
+import 'screens/menu_screen.dart';
 import 'firebase_options.dart';
 import 'services/firestore_service.dart';
 import 'services/image_upload_service.dart';
 
+void main() {
+  runZonedGuarded(() async {
+    WidgetsFlutterBinding.ensureInitialized();
 
-void main() async {
-  WidgetsFlutterBinding.ensureInitialized();
+    await Firebase.initializeApp(
+      options: DefaultFirebaseOptions.currentPlatform,
+    );
 
-  await Firebase.initializeApp(
-    options: DefaultFirebaseOptions.currentPlatform,
-  );
+    // Initialize services and controllers
+    await Get.putAsync(() async => FirestoreService());
+    await Get.putAsync(() async => AuthController());
+    await Get.putAsync(() async => AdminController());
+    await Get.putAsync(() async => ImageUploadService());
+    await Get.putAsync(() async => CartController());
+    await Get.putAsync(() async => NavigationController());
 
-  // Initialize services and controllers
-  Get.put(FirestoreService());
-  Get.put(AuthController());
-  Get.put(AdminController());
-  Get.put(ImageUploadService());
-
-  runApp(const IceCreamApp());
+    runApp(const IceCreamApp());
+  }, (error, stack) {
+    print('Uncaught error: $error');
+    print(stack);
+  });
 }
 
 class IceCreamApp extends StatelessWidget {
-  const IceCreamApp({super.key});
+  const IceCreamApp({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -40,54 +51,58 @@ class IceCreamApp extends StatelessWidget {
       ),
       debugShowCheckedModeBanner: false,
       home: FutureBuilder(
-        future: precacheImage(const AssetImage("assets/logo.png"), context),
+        future: _initializeApp(context),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return const CircularProgressIndicator();
-          } else if (snapshot.hasError) {
-            print("Error loading asset: ${snapshot.error}");
             return const Scaffold(
-              body: Center(child: Text("Error loading assets")),
+              body: Center(child: CircularProgressIndicator()),
+            );
+          } else if (snapshot.hasError) {
+            print("Error initializing app: ${snapshot.error}");
+            return Scaffold(
+              body: Center(child: Text("Error: ${snapshot.error}")),
             );
           } else {
-            return const HomePage();
+            return _buildAuthenticatedScreen();
           }
         },
       ),
     );
   }
-}
 
-class ImageUploadScreen extends StatelessWidget {
-  ImageUploadScreen({Key? key}) : super(key: key);
-
-  final ImagePicker _picker = ImagePicker();
-  final ImageUploadService _imageUploadService = Get.find<ImageUploadService>();
-  final FirestoreService _firestoreService = Get.find<FirestoreService>();
-
-  Future<void> _uploadImage() async {
-    final XFile? image = await _picker.pickImage(source: ImageSource.gallery);
-    if (image != null) {
-      final File imageFile = File(image.path);
-      final String? imageUrl =
-          await _imageUploadService.uploadImageToImgBB(imageFile);
-      if (imageUrl != null) {
-        await _firestoreService.saveImageUrlToFirebase(imageUrl);
-        Get.snackbar('Success', 'Image uploaded and saved successfully');
-      }
+  Future<void> _initializeApp(BuildContext context) async {
+    try {
+      await precacheImage(const AssetImage("assets/logo.png"), context);
+    } catch (e) {
+      print("Error loading asset: $e");
+      // You might want to rethrow the error or handle it in a way that makes sense for your app
+      // throw e;
     }
   }
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('Image Upload')),
-      body: Center(
-        child: ElevatedButton(
-          onPressed: _uploadImage,
-          child: const Text('Upload Image'),
-        ),
-      ),
+  Widget _buildAuthenticatedScreen() {
+    return StreamBuilder<User?>(
+      stream: FirebaseAuth.instance.authStateChanges(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Scaffold(
+            body: Center(child: CircularProgressIndicator()),
+          );
+        } else if (snapshot.hasData) {
+          // User is logged in
+          final AuthController authController = Get.find<AuthController>();
+          return Obx(() {
+            if (authController.isAdmin.value) {
+              return AdminDashboard();
+            } else {
+              return MenuScreen();
+            }
+          });
+        } else {
+          // User is not logged in
+          return const HomePage();
+        }
+      },
     );
   }
 }

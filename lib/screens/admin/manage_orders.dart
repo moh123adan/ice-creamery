@@ -5,6 +5,8 @@ import '../../services/firestore_service.dart';
 class ManageOrders extends StatelessWidget {
   final FirestoreService firestoreService = FirestoreService();
 
+  ManageOrders({super.key});
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(

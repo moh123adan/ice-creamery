@@ -7,6 +7,8 @@ import '../../controllers/admin_controller.dart';
 class ManageProducts extends StatelessWidget {
   final AdminController _controller = Get.find();
 
+   ManageProducts({super.key});
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(

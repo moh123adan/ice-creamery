@@ -2,48 +2,51 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:get/get.dart';
 import 'package:flutter/material.dart';
-import '../screens/adimin/admin_dashboard.dart';
+import '../screens/admin/admin_dashboard.dart';
 import '../screens/home_screen.dart';
 import '../screens/login.dart';
+// import '../screens/home_screen.dart';
+// import '../screens/login.dart';
 
 class AuthController extends GetxController {
   static AuthController instance = Get.find();
-  late Rx<User?> _user;
-  FirebaseAuth auth = FirebaseAuth.instance;
-  FirebaseFirestore firestore = FirebaseFirestore.instance;
+  final FirebaseAuth _auth = FirebaseAuth.instance;
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
-  User? get currentUser => _user.value;
+  final Rx<User?> user = Rx<User?>(null);
+  final RxBool isAdmin = false.obs;
+
+  User? get currentUser => user.value;
 
   @override
-  void onReady() {
-    super.onReady();
-    _user = Rx<User?>(auth.currentUser);
-    _user.bindStream(auth.userChanges());
-    ever(_user, _initialScreen);
+  void onInit() {
+    super.onInit();
+    user.bindStream(_auth.authStateChanges());
+    ever(user, _setInitialScreen);
   }
 
-  // Handle navigation based on authentication state
-  _initialScreen(User? user) async {
+  void _setInitialScreen(User? user) async {
     if (user == null) {
       Get.offAll(() => LoginPage());
     } else {
       try {
         DocumentSnapshot userDoc =
-        await firestore.collection('users').doc(user.uid).get();
+            await _firestore.collection('users').doc(user.uid).get();
 
         if (userDoc.exists) {
           String role = userDoc['role'] ?? 'user';
+          isAdmin.value = (role == 'admin');
 
-          if (role == 'admin') {
+          if (isAdmin.value) {
             Get.offAll(() => AdminDashboard());
           } else {
-            Get.offAll(() => AdminDashboard());
+            Get.offAll(() => HomePage());
           }
         } else {
           print("No user document found.");
           Get.snackbar("Error", "No user data found in Firestore.",
               backgroundColor: Colors.red, colorText: Colors.white);
-          logout(); // ✅ Fixed here (no 'await')
+          await signOut();
         }
       } catch (e) {
         print("Error fetching user role: $e");
@@ -54,15 +57,15 @@ class AuthController extends GetxController {
     }
   }
 
-  // Register a new user
-  void register(String name, String email, String password) async {
+  Future<void> register(String name, String email, String password) async {
     try {
-      UserCredential userCredential = await auth.createUserWithEmailAndPassword(
+      UserCredential userCredential =
+          await _auth.createUserWithEmailAndPassword(
         email: email,
         password: password,
       );
 
-      await firestore.collection('users').doc(userCredential.user!.uid).set({
+      await _firestore.collection('users').doc(userCredential.user!.uid).set({
         'name': name,
         'email': email,
         'uid': userCredential.user!.uid,
@@ -78,10 +81,9 @@ class AuthController extends GetxController {
     }
   }
 
-  // User login
-  void login(String email, String password) async {
+  Future<void> login(String email, String password) async {
     try {
-      await auth.signInWithEmailAndPassword(email: email, password: password);
+      await _auth.signInWithEmailAndPassword(email: email, password: password);
       Get.snackbar("Success", "Logged in successfully",
           backgroundColor: Colors.green, colorText: Colors.white);
     } catch (e) {
@@ -91,8 +93,16 @@ class AuthController extends GetxController {
     }
   }
 
-  // User logout
-  void logout() async {
-    await auth.signOut();
+  Future<void> signOut() async {
+    try {
+      await _auth.signOut();
+      isAdmin.value = false;
+      Get.snackbar("Success", "Logged out successfully",
+          backgroundColor: Colors.green, colorText: Colors.white);
+    } catch (e) {
+      print("Logout Error: $e");
+      Get.snackbar("Error", "Logout failed: $e",
+          backgroundColor: Colors.red, colorText: Colors.white);
+    }
   }
 }

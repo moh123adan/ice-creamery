@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import '../controllers/cart_controller.dart';
 
-class DetailsScreen extends StatelessWidget {
+class DetailsScreen extends GetView<CartController> {
   final Map<String, dynamic> product;
 
-  const DetailsScreen({super.key, required this.product});
+  // ignore: use_super_parameters
+  const DetailsScreen({Key? key, required this.product}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -120,13 +122,7 @@ class DetailsScreen extends StatelessWidget {
             padding: const EdgeInsets.all(20),
             child: ElevatedButton(
               onPressed: () {
-                // Add to cart functionality
-                Get.snackbar(
-                  'Success',
-                  'Added to cart!',
-                  backgroundColor: Colors.green,
-                  colorText: Colors.white,
-                );
+                controller.addToCart(product, quantity.value);
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.pink[100],

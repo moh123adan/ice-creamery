@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'adimin/admin_dashboard.dart';
+import 'admin/admin_dashboard.dart';
 import 'login.dart';
 // import '../admin/admin_dashboard.dart';
 

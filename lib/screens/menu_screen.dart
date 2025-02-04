@@ -5,6 +5,7 @@ import '../controllers/navigation_controller.dart';
 import 'details_screen.dart';
 import 'favorite_screen.dart';
 import 'profile_screen.dart';
+import 'cart_screen.dart';
 
 class MenuScreen extends StatelessWidget {
   MenuScreen({super.key});
@@ -220,13 +221,13 @@ class MenuScreen extends StatelessWidget {
           navigationController.changePage(index);
           switch (index) {
             case 0:
-              Get.offAll(() => MenuScreen());
+              // We're already on the menu screen, so do nothing
               break;
             case 1:
               Get.to(() => FavoritesScreen());
               break;
             case 2:
-              Get.snackbar('Cart', 'Coming soon!');
+              Get.to(() => CartScreen());
               break;
             case 3:
               Get.to(() => const ProfileScreen());

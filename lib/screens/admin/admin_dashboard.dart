@@ -3,12 +3,15 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
 import '../../controllers/admin_controller.dart';
-import '../../screens/menu_screen.dart';
+import '../../controllers/auth_controller.dart';
+import '../menu_screen.dart';
+// import '../../screens/menu_screen.dartrr';
 
 class AdminDashboard extends StatelessWidget {
   AdminDashboard({super.key});
 
   final AdminController _adminController = Get.find<AdminController>();
+  final AuthController _authController = Get.find<AuthController>();
 
   final TextEditingController nameController = TextEditingController();
   final TextEditingController priceController = TextEditingController();
@@ -67,9 +70,6 @@ class AdminDashboard extends StatelessWidget {
       selectedImageData.value = null;
 
       Get.snackbar("Success", "Product added successfully!");
-
-      // Navigate to MenuScreen after successful product addition
-      Get.off(() => MenuScreen());
     } catch (e) {
       Get.back(); // Close loading indicator
       print('Error occurred: $e');
@@ -80,7 +80,15 @@ class AdminDashboard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Admin Dashboard')),
+      appBar: AppBar(
+        title: const Text('Admin Dashboard'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.logout),
+            onPressed: () => _authController.signOut(),
+          ),
+        ],
+      ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: SingleChildScrollView(
@@ -125,6 +133,11 @@ class AdminDashboard extends StatelessWidget {
               ElevatedButton(
                 onPressed: _submitProduct,
                 child: const Text('Add Product'),
+              ),
+              const SizedBox(height: 20),
+              ElevatedButton(
+                onPressed: () => Get.to(() => MenuScreen()),
+                child: const Text('View Menu'),
               ),
             ],
           ),
