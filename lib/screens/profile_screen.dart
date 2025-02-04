@@ -1,13 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-
+import '../controllers/auth_controller.dart';
 import 'favorite_screen.dart';
 
 class ProfileScreen extends StatelessWidget {
-  const ProfileScreen({Key? key}) : super(key: key);
+  const ProfileScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final AuthController authController = Get.find<AuthController>();
+
     return Scaffold(
       backgroundColor: Colors.white,
       body: SafeArea(
@@ -71,7 +73,19 @@ class ProfileScreen extends StatelessWidget {
               _buildMenuItem(
                 'Log Out',
                 Icons.logout,
-                () => Get.snackbar('Logout', 'Coming soon!'),
+                () async {
+                  try {
+                    await authController.signOut();
+                  } catch (e) {
+                    Get.snackbar(
+                      'Error',
+                      'Failed to log out: $e',
+                      snackPosition: SnackPosition.BOTTOM,
+                      backgroundColor: Colors.red,
+                      colorText: Colors.white,
+                    );
+                  }
+                },
               ),
             ],
           ),

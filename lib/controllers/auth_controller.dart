@@ -3,10 +3,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:get/get.dart';
 import 'package:flutter/material.dart';
 import '../screens/admin/admin_dashboard.dart';
-import '../screens/home_screen.dart';
+import '../screens/menu_screen.dart';
 import '../screens/login.dart';
-// import '../screens/home_screen.dart';
-// import '../screens/login.dart';
 
 class AuthController extends GetxController {
   static AuthController instance = Get.find();
@@ -40,7 +38,7 @@ class AuthController extends GetxController {
           if (isAdmin.value) {
             Get.offAll(() => AdminDashboard());
           } else {
-            Get.offAll(() => HomePage());
+            Get.offAll(() => MenuScreen());
           }
         } else {
           print("No user document found.");
@@ -52,7 +50,7 @@ class AuthController extends GetxController {
         print("Error fetching user role: $e");
         Get.snackbar("Error", "Error fetching user role: $e",
             backgroundColor: Colors.red, colorText: Colors.white);
-        Get.offAll(() => HomePage());
+        Get.offAll(() => MenuScreen());
       }
     }
   }
@@ -86,6 +84,9 @@ class AuthController extends GetxController {
       await _auth.signInWithEmailAndPassword(email: email, password: password);
       Get.snackbar("Success", "Logged in successfully",
           backgroundColor: Colors.green, colorText: Colors.white);
+
+      // After successful login, navigate to MenuScreen
+      Get.offAll(() => MenuScreen());
     } catch (e) {
       print("Login Error: $e");
       Get.snackbar("Error", "Login failed: $e",
@@ -99,6 +100,7 @@ class AuthController extends GetxController {
       isAdmin.value = false;
       Get.snackbar("Success", "Logged out successfully",
           backgroundColor: Colors.green, colorText: Colors.white);
+      Get.offAll(() => LoginPage());
     } catch (e) {
       print("Logout Error: $e");
       Get.snackbar("Error", "Logout failed: $e",

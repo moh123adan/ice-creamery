@@ -2,9 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../controllers/cart_controller.dart';
 import '../controllers/navigation_controller.dart';
-import 'favorite_screen.dart';
-import 'menu_screen.dart';
-import 'profile_screen.dart';
+import 'payment_screen.dart';
 
 class CartScreen extends GetView<CartController> {
   // ignore: use_super_parameters
@@ -36,9 +34,23 @@ class CartScreen extends GetView<CartController> {
               child: Obx(
                 () => controller.cartItems.isEmpty
                     ? const Center(
-                        child: Text(
-                          'Your cart is empty',
-                          style: TextStyle(fontSize: 18),
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              Icons.shopping_cart_outlined,
+                              size: 64,
+                              color: Colors.grey,
+                            ),
+                            SizedBox(height: 16),
+                            Text(
+                              'Your cart is empty',
+                              style: TextStyle(
+                                fontSize: 18,
+                                color: Colors.grey,
+                              ),
+                            ),
+                          ],
                         ),
                       )
                     : ListView.builder(
@@ -46,261 +58,231 @@ class CartScreen extends GetView<CartController> {
                         padding: const EdgeInsets.all(16),
                         itemBuilder: (context, index) {
                           final item = controller.cartItems[index];
-                          return Container(
-                            margin: const EdgeInsets.only(bottom: 16),
-                            padding: const EdgeInsets.all(12),
-                            decoration: BoxDecoration(
-                              color: Colors.white,
-                              borderRadius: BorderRadius.circular(12),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.grey.withOpacity(0.1),
-                                  spreadRadius: 1,
-                                  blurRadius: 5,
-                                  offset: const Offset(0, 2),
-                                ),
-                              ],
+                          return Dismissible(
+                            key: Key(item['id'].toString()),
+                            direction: DismissDirection.endToStart,
+                            onDismissed: (_) {
+                              controller.removeFromCart(item['id'].toString());
+                            },
+                            background: Container(
+                              alignment: Alignment.centerRight,
+                              padding: const EdgeInsets.only(right: 20),
+                              color: Colors.red,
+                              child: const Icon(
+                                Icons.delete,
+                                color: Colors.white,
+                              ),
                             ),
-                            child: Row(
-                              children: [
-                                // Product Image
-                                ClipRRect(
-                                  borderRadius: BorderRadius.circular(8),
-                                  child: Image.network(
-                                    item['imageUrl'] ??
-                                        'https://via.placeholder.com/60',
-                                    width: 60,
-                                    height: 60,
-                                    fit: BoxFit.cover,
-                                    errorBuilder: (context, error, stackTrace) {
-                                      return Container(
-                                        width: 60,
-                                        height: 60,
-                                        color: Colors.grey[200],
-                                        child: const Icon(
-                                            Icons.image_not_supported),
-                                      );
-                                    },
-                                  ),
-                                ),
-                                const SizedBox(width: 12),
-                                // Product Details
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        item['name'] ?? 'Unknown Product',
-                                        style: const TextStyle(
-                                          fontSize: 16,
-                                          fontWeight: FontWeight.w500,
-                                        ),
-                                      ),
-                                      const SizedBox(height: 4),
-                                      Text(
-                                        '\$${(item['price'] ?? 0.0).toStringAsFixed(2)}',
-                                        style: const TextStyle(
-                                          fontSize: 14,
-                                          color: Colors.black87,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                                // Quantity Controls
-                                Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    IconButton(
-                                      icon: const Icon(Icons.remove, size: 20),
-                                      onPressed: () {
-                                        final currentQuantity =
-                                            item['quantity'] as int;
-                                        if (currentQuantity > 1) {
-                                          controller.updateQuantity(
-                                            item['id'].toString(),
-                                            currentQuantity - 1,
-                                          );
-                                        }
-                                      },
-                                    ),
-                                    Text(
-                                      (item['quantity'] ?? 1).toString(),
-                                      style: const TextStyle(
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.w500,
-                                      ),
-                                    ),
-                                    IconButton(
-                                      icon: const Icon(Icons.add, size: 20),
-                                      onPressed: () {
-                                        final currentQuantity =
-                                            item['quantity'] as int;
-                                        controller.updateQuantity(
-                                          item['id'].toString(),
-                                          currentQuantity + 1,
-                                        );
-                                      },
-                                    ),
-                                  ],
-                                ),
-                                // Remove Button
-                                IconButton(
-                                  icon: const Icon(Icons.close, size: 20),
-                                  onPressed: () {
-                                    controller
-                                        .removeFromCart(item['id'].toString());
-                                  },
-                                ),
-                              ],
-                            ),
+                            child: CartItemWidget(item: item),
                           );
                         },
                       ),
               ),
             ),
-            // Bottom Section
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.grey.withOpacity(0.1),
-                    spreadRadius: 1,
-                    blurRadius: 5,
-                    offset: const Offset(0, -2),
-                  ),
-                ],
-              ),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  // Total Amount
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: 16),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        const Text(
-                          'Total:',
-                          style: TextStyle(
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        Obx(() => Text(
-                              '\$${controller.totalAmount.toStringAsFixed(2)}',
-                              style: const TextStyle(
-                                fontSize: 20,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            )),
-                      ],
-                    ),
-                  ),
-                  // Checkout Button
-                  SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton(
-                      onPressed: controller.cartItems.isEmpty
-                          ? null
-                          : () {
-                              Get.snackbar(
-                                'Success',
-                                'Proceeding to checkout...',
-                                snackPosition: SnackPosition.BOTTOM,
-                              );
-                            },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.pink[100],
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(25),
-                        ),
-                      ),
-                      child: const Text(
-                        'Checkout',
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.black87,
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            // Bottom Navigation Bar
-            Container(
-              padding: const EdgeInsets.symmetric(vertical: 10),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.grey.withOpacity(0.1),
-                    spreadRadius: 1,
-                    blurRadius: 5,
-                    offset: const Offset(0, -2),
-                  ),
-                ],
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceAround,
-                children: [
-                  _buildNavItem(Icons.home, 'Menu', 0),
-                  _buildNavItem(Icons.favorite_border, 'Favorite', 1),
-                  _buildNavItem(Icons.shopping_cart, 'Cart', 2),
-                  _buildNavItem(Icons.person_outline, 'Profile', 3),
-                ],
-              ),
-            ),
+            CheckoutSection(),
           ],
         ),
       ),
     );
   }
+}
 
-  Widget _buildNavItem(IconData icon, String label, int index) {
-    return Obx(() {
-      final isSelected = navigationController.currentIndex.value == index;
-      return GestureDetector(
-        onTap: () {
-          navigationController.changePage(index);
-          switch (index) {
-            case 0:
-              Get.off(() => MenuScreen());
-              break;
-            case 1:
-              Get.to(() => FavoritesScreen());
-              break;
-            case 2:
-              // We're already on cart screen
-              break;
-            case 3:
-              Get.to(() => ProfileScreen());
-              break;
-          }
-        },
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              icon,
-              color: isSelected ? Colors.pink[100] : Colors.grey,
+class CartItemWidget extends GetView<CartController> {
+  final Map<String, dynamic> item;
+
+  const CartItemWidget({
+    Key? key,
+    required this.item,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 16),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.withOpacity(0.1),
+            spreadRadius: 1,
+            blurRadius: 5,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          ClipRRect(
+            borderRadius: BorderRadius.circular(8),
+            child: Image.network(
+              item['imageUrl'] ?? '',
+              width: 60,
+              height: 60,
+              fit: BoxFit.cover,
+              errorBuilder: (context, error, stackTrace) {
+                return Container(
+                  width: 60,
+                  height: 60,
+                  color: Colors.grey[200],
+                  child: const Icon(Icons.image_not_supported),
+                );
+              },
             ),
-            Text(
-              label,
-              style: TextStyle(
-                color: isSelected ? Colors.pink[100] : Colors.grey,
-                fontSize: 12,
-              ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  item['name'] ?? '',
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  '\$${(item['price'] as num).toStringAsFixed(2)}',
+                  style: const TextStyle(
+                    fontSize: 14,
+                    color: Colors.black87,
+                  ),
+                ),
+              ],
             ),
-          ],
+          ),
+          QuantityControls(item: item),
+        ],
+      ),
+    );
+  }
+}
+
+class QuantityControls extends GetView<CartController> {
+  final Map<String, dynamic> item;
+
+  const QuantityControls({
+    Key? key,
+    required this.item,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        IconButton(
+          icon: const Icon(Icons.remove, size: 20),
+          onPressed: () {
+            if (item['quantity'] > 1) {
+              controller.updateQuantity(
+                  item['id'].toString(), item['quantity'] - 1);
+            }
+          },
         ),
+        Text(
+          item['quantity'].toString(),
+          style: const TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+        IconButton(
+          icon: const Icon(Icons.add, size: 20),
+          onPressed: () {
+            controller.updateQuantity(
+                item['id'].toString(), item['quantity'] + 1);
+          },
+        ),
+      ],
+    );
+  }
+}
+
+class CheckoutSection extends GetView<CartController> {
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.withOpacity(0.1),
+            spreadRadius: 1,
+            blurRadius: 5,
+            offset: const Offset(0, -2),
+          ),
+        ],
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Padding(
+            padding: const EdgeInsets.only(bottom: 16),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text(
+                  'Total:',
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                Obx(() => Text(
+                      '\$${controller.totalAmount.toStringAsFixed(2)}',
+                      style: const TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    )),
+              ],
+            ),
+          ),
+          SizedBox(
+            width: double.infinity,
+            child: Obx(() => ElevatedButton(
+                  onPressed: controller.itemCount > 0
+                      ? () => _handleCheckout(context)
+                      : null,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.pink[100],
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(25),
+                    ),
+                  ),
+                  child: Text(
+                    'Checkout \$${controller.totalAmount.toStringAsFixed(2)}',
+                    style: const TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black87,
+                    ),
+                  ),
+                )),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _handleCheckout(BuildContext context) {
+    if (controller.totalAmount <= 0) {
+      Get.snackbar(
+        'Error',
+        'Your cart is empty',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
       );
-    });
+      return;
+    }
+
+    Get.to(() => PaymentScreen());
   }
 }

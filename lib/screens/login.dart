@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
-// import 'package:get/get.dart';
+import 'package:get/get.dart';
 import '../controllers/auth_controller.dart';
 import 'register.dart';
+// import 'menu_screen.dart';
 
 class LoginPage extends StatelessWidget {
   final emailController = TextEditingController();
@@ -18,7 +19,8 @@ class LoginPage extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Text("Sign In", style: TextStyle(fontSize: 40, fontWeight: FontWeight.bold)),
+            Text("Sign In",
+                style: TextStyle(fontSize: 40, fontWeight: FontWeight.bold)),
             SizedBox(height: 50),
             TextField(
               controller: emailController,
@@ -26,7 +28,8 @@ class LoginPage extends StatelessWidget {
                 hintText: "Enter Your Email",
                 filled: true,
                 fillColor: Colors.white,
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(20)),
+                border:
+                    OutlineInputBorder(borderRadius: BorderRadius.circular(20)),
               ),
             ),
             SizedBox(height: 30),
@@ -37,13 +40,14 @@ class LoginPage extends StatelessWidget {
                 hintText: "Enter Your Password",
                 filled: true,
                 fillColor: Colors.white,
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(20)),
+                border:
+                    OutlineInputBorder(borderRadius: BorderRadius.circular(20)),
               ),
             ),
             SizedBox(height: 40),
             ElevatedButton(
-              onPressed: () {
-                AuthController.instance.login(
+              onPressed: () async {
+                await AuthController.instance.login(
                   emailController.text.trim(),
                   passwordController.text.trim(),
                 );
@@ -58,7 +62,7 @@ class LoginPage extends StatelessWidget {
             SizedBox(height: 20),
             TextButton(
               onPressed: () {
-                Navigator.push(context, MaterialPageRoute(builder: (context) => RegisterPage()));
+                Get.to(() => RegisterPage());
               },
               child: Text("Don't have an account? Register"),
             )
