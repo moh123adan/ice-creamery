@@ -1,32 +1,40 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+
 class OrderModel {
   final String id;
-  final String username;       // ✅ Added
-  final String productName;    // ✅ Added
-  final int quantity;
+  final String userId;
+  final List<Map<String, dynamic>> items;
+  final double totalAmount;
+  final String status;
+  final DateTime createdAt;
 
   OrderModel({
     required this.id,
-    required this.username,
-    required this.productName,
-    required this.quantity,
+    required this.userId,
+    required this.items,
+    required this.totalAmount,
+    required this.status,
+    required this.createdAt,
   });
 
-  // ✅ Factory constructor to create an OrderModel from Firestore
-  factory OrderModel.fromFirestore(Map<String, dynamic> data, String documentId) {
+  factory OrderModel.fromMap(Map<String, dynamic> map, String id) {
     return OrderModel(
-      id: documentId,
-      username: data['username'] ?? '',       // Fallback if null
-      productName: data['productName'] ?? '', // Fallback if null
-      quantity: data['quantity'] ?? 0,
+      id: id,
+      userId: map['userId'] ?? '',
+      items: List<Map<String, dynamic>>.from(map['items'] ?? []),
+      totalAmount: (map['totalAmount'] ?? 0.0).toDouble(),
+      status: map['status'] ?? 'pending',
+      createdAt: (map['createdAt'] as Timestamp).toDate(),
     );
   }
 
-  // ✅ Convert to Map (useful when adding/updating Firestore documents)
   Map<String, dynamic> toMap() {
     return {
-      'username': username,
-      'productName': productName,
-      'quantity': quantity,
+      'userId': userId,
+      'items': items,
+      'totalAmount': totalAmount,
+      'status': status,
+      'createdAt': Timestamp.fromDate(createdAt),
     };
   }
 }

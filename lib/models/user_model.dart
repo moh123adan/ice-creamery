@@ -24,4 +24,6 @@ class UserModel {
       isAdmin: data['isAdmin'] ?? false,
     );
   }
+
+  static Future<void> fromMap(Map<String, dynamic> data, String id) async {}
 }

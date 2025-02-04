@@ -27,35 +27,53 @@ class AuthController extends GetxController {
     if (user == null) {
       Get.offAll(() => LoginPage());
     } else {
-      try {
-        DocumentSnapshot userDoc =
-            await _firestore.collection('users').doc(user.uid).get();
-
-        if (userDoc.exists) {
-          String role = userDoc['role'] ?? 'user';
-          isAdmin.value = (role == 'admin');
-
-          if (isAdmin.value) {
-            Get.offAll(() => AdminDashboard());
-          } else {
-            Get.offAll(() => MenuScreen());
-          }
-        } else {
-          print("No user document found.");
-          Get.snackbar("Error", "No user data found in Firestore.",
-              backgroundColor: Colors.red, colorText: Colors.white);
-          await signOut();
-        }
-      } catch (e) {
-        print("Error fetching user role: $e");
-        Get.snackbar("Error", "Error fetching user role: $e",
-            backgroundColor: Colors.red, colorText: Colors.white);
-        Get.offAll(() => MenuScreen());
-      }
+      await _checkUserRole(user);
     }
   }
 
-  Future<void> register(String name, String email, String password) async {
+  Future<void> _checkUserRole(User user) async {
+    try {
+      DocumentSnapshot userDoc =
+          await _firestore.collection('users').doc(user.uid).get();
+
+      if (userDoc.exists) {
+        String role = userDoc.get('role') ?? 'user';
+        isAdmin.value = (role == 'admin');
+
+        if (isAdmin.value) {
+          Get.offAll(() => AdminDashboard());
+        } else {
+          Get.offAll(() => MenuScreen());
+        }
+      } else {
+        print("No user document found. Creating one...");
+        await _createUserDocument(user);
+      }
+    } catch (e) {
+      print("Error fetching user role: $e");
+      Get.snackbar("Error", "Error fetching user role: $e",
+          backgroundColor: Colors.red, colorText: Colors.white);
+      Get.offAll(() => MenuScreen());
+    }
+  }
+
+  Future<void> _createUserDocument(User user) async {
+    try {
+      await _firestore.collection('users').doc(user.uid).set({
+        'email': user.email,
+        'uid': user.uid,
+        'role': user.email == 'admin@example.com' ? 'admin' : 'user',
+      });
+      await _checkUserRole(user);
+    } catch (e) {
+      print("Error creating user document: $e");
+      Get.snackbar("Error", "Error creating user document: $e",
+          backgroundColor: Colors.red, colorText: Colors.white);
+    }
+  }
+
+  Future<void> register(String name, String email, String password,
+      {bool isAdmin = false}) async {
     try {
       UserCredential userCredential =
           await _auth.createUserWithEmailAndPassword(
@@ -67,7 +85,7 @@ class AuthController extends GetxController {
         'name': name,
         'email': email,
         'uid': userCredential.user!.uid,
-        'role': 'user',
+        'role': isAdmin ? 'admin' : 'user',
       });
 
       Get.snackbar("Success", "Account created successfully",
@@ -81,12 +99,11 @@ class AuthController extends GetxController {
 
   Future<void> login(String email, String password) async {
     try {
-      await _auth.signInWithEmailAndPassword(email: email, password: password);
+      UserCredential userCredential = await _auth.signInWithEmailAndPassword(
+          email: email, password: password);
+      await _checkUserRole(userCredential.user!);
       Get.snackbar("Success", "Logged in successfully",
           backgroundColor: Colors.green, colorText: Colors.white);
-
-      // After successful login, navigate to MenuScreen
-      Get.offAll(() => MenuScreen());
     } catch (e) {
       print("Login Error: $e");
       Get.snackbar("Error", "Login failed: $e",
@@ -106,5 +123,10 @@ class AuthController extends GetxController {
       Get.snackbar("Error", "Logout failed: $e",
           backgroundColor: Colors.red, colorText: Colors.white);
     }
+  }
+
+  Future<void> createAdminAccount(
+      String name, String email, String password) async {
+    await register(name, email, password, isAdmin: true);
   }
 }
